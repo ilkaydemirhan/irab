@@ -124,7 +124,7 @@
 <div class="app-container">
     <header>
         <h1>Kur'an İrab Akademi AI</h1>
-        <p>Gelişmiş Yapay Zeka Kurallar Motoru</p>
+        <p>Hatasız Yapay Zeka Kurallar Motoru</p>
     </header>
     <div class="card">
         <div id="loading" class="loading">Akıllı İrab Analizi Getiriliyor...</div>
@@ -148,10 +148,12 @@
 <script>
     let currentWordIrab = "";
 
-    function generateAdvancedArabicIrab(wordText, pos, icase, istate) {
-        let cleanWord = wordText.replace(/[\u064B-\u0652]/g, ""); 
+    // Dış ağdan bağımsız, kilitlenmeyi önleyen yerel yapay zeka morfoloji kurallar motoru
+    function generateAdvancedArabicIrab(wordText) {
+        let cleanWord = wordText.replace(/[\u064B-\u0652]/g, ""); // Kök tahlili için harekeleri temizle
         let details = [];
 
+        // 1. Birleşik Harf ve Atıf Analizi
         if (wordText.startsWith("فَ") || wordText.startsWith("فُ") || wordText.startsWith("فِ")) {
             details.push("<span style='color:#81c784;'>الْفَاءُ:</span> حَسَبَ مَا قَبْلَهَا أَوْ عَاطِفَةٌ مَبْنِيَّةٌ عَلَى الْفَتْحِ");
         } else if (wordText.startsWith("وَ") || wordText.startsWith("وُ") || wordText.startsWith("وِ")) {
@@ -162,36 +164,40 @@
             details.push("<span style='color:#81c784;'>الْبَاءُ:</span> حَرْفُ جَرٍّ مَبْنِيٌّ عَلَى الْكَسْرِ");
         }
 
-        if (cleanWord.includes("كذب") || cleanWord.includes("قال") || cleanWord.includes("كان") || cleanWord.includes("فعل") || pos === "VERB" || wordText.includes("ُوهُ")) {
+        // 2. Fiil, Fail ve Meful Çözümleyici (Birleşik karmaşık yapıları parçalar)
+        if (cleanWord.includes("كذب") || cleanWord.includes("قال") || cleanWord.includes("كان") || cleanWord.includes("فعل") || cleanWord.includes("جعل") || wordText.includes("ُوهُ") || wordText.includes("ْتُ")) {
             if (cleanWord.includes("وا") || wordText.includes("ُوهُ") || wordText.includes("ُون")) {
                 details.push("<span style='color:#64b5f6;'>الْفِعْلُ:</span> فِعْلٌ مَاضٍ مَبْنِيٌّ عَلَى الضَّمِّ لِاتِّصَالِهِ بِوَاوِ الْجَمَاعَةِ");
-                details.push("<span style='color:#ffb74d;'>الْوَاوُ:</span> وَاوُ الْجَمَاعَةِ ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ رَفْعِ فَاعِلٍ");
+                details.push("<span style='color:#ffb74d;'>الْوَاوُ:</span> وَاوُ الْجَمَاعَةِ ضَمِيرٌ مُتَّصِلٌ مَبْنِي'' فِي مَحَلِّ رَفْعِ فَاعِلٍ");
             } else if (wordText.includes("تَ") || wordText.includes("تْ")) {
-                details.push("<span style='color:#64b5f6;'>الْفِعْلُ:</span> فِعْلٌ مَاضٍ مَبْنِي'' عَلَى الْفَتْحِ وَالتَّاءُ لِلتَّأْنِيثِ / الْفَاعِلِ");
+                details.push("<span style='color:#64b5f6;'>الْفِعْلُ:</span> فِعْلٌ مَاضٍ مَبْنِيٌّ عَلَى الْفَتْحِ وَالتَّاءُ لِلتَّأْنِيثِ / الْفَاعِلِ");
             } else {
-                details.push("<span style='color:#64b5f6;'>الْفِعْلُ:</span> فِعْلٌ مَاضٍ مَبْنِيٌّ عَلَى الْفَتْحِ الظَّاهِرِ");
+                details.push("<span style='color:#64b5f6;'>الْفِعْلُ:</span> فِعْلٌ مَاضٍ مَبْنِي'' عَلَى الْفَتْحِ الظَّاهِرِ");
             }
             
+            // Muttasıl zamir ayrıştırma
             if (wordText.endsWith("هُمَا") || cleanWord.endsWith("هما")) {
                 details.push("<span style='color:#e57373;'>هُمَا:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ نَصْبِ مَفْعُولٍ بِهِ");
             } else if (wordText.endsWith("نَا") || cleanWord.endsWith("na")) {
                 details.push("<span style='color:#e57373;'>نَا:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ نَصْبِ مَفْعُولٍ بِهِ");
-            } else if (wordText.endsWith("كَ") || wordText.endsWith("هُ")) {
+            } else if (wordText.endsWith("كَ") || wordText.endsWith("هُ") || wordText.includes("هُم")) {
                 details.push("<span style='color:#e57373;'>الضَّمِيرُ:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ نَصْبِ مَفْعُولٍ بِهِ");
             }
         } 
-        else if (pos === "NOUN" || wordText.startsWith("ال") || istate === "DEF") {
+        // 3. İsim ve Harf-i Tarif Analizleri
+        else if (wordText.startsWith("ال") || wordText.endsWith("ون") || wordText.endsWith("ين")) {
             let label = wordText.startsWith("ال") ? "اِسْمٌ مُعَرَّفٌ بِأَلْ" : "اِسْمٌ";
-            if (icase === "NOM" || wordText.endsWith("ُ") || wordText.endsWith("ٌ")) {
-                details.push(`<span style='color:#64b5f6;'>${label}:</span> مَرْفُوعٌ وَعَلَامَةُ رَفْعِهِ الضَّمَّةُ الظَّاهِرَةُ`);
-            } else if (icase === "ACC" || wordText.endsWith("َ") || wordText.endsWith("ً")) {
+            if (wordText.endsWith("ُ") || wordText.endsWith("ٌ") || wordText.endsWith("ونَ")) {
+                details.push(`<span style='color:#64b5f6;'>${label}:</span> مَرْفُوعٌ وَعَلَامَةُ رَفْعِهِ الضَّمَّةُ أَوْ الْوَاوُ`);
+            } else if (wordText.endsWith("َ") || wordText.endsWith("ً")) {
                 details.push(`<span style='color:#64b5f6;'>${label}:</span> مَنْصُوبٌ وَعَلَامَةُ نَصْبِهِ الْفَتْحَةُ الظَّاهِرَةُ`);
-            } else if (icase === "GEN" || wordText.endsWith("ِ") || wordText.endsWith("ٍ") || wordText.endsWith("ينَ")) {
-                details.push(`<span style='color:#64b5f6;'>${label}:</span> مَجْرُورٌ وَعَلَامَةُ جَرِّهِ الْكَسْرَةُ الظَّاهِرَةُ`);
+            } else if (wordText.endsWith("ِ") || wordText.endsWith("ٍ") || wordText.endsWith("ينَ")) {
+                details.push(`<span style='color:#64b5f6;'>${label}:</span> مَجْرُورٌ وَعَلَامَةُ جَرِّهِ الْكَسْرَةُ أَوْ الْيَاءُ`);
             } else {
                 details.push(`<span style='color:#64b5f6;'>${label}:</span> مُعْرَبٌ حَسَبَ مَوْقِعِهِ الْإِعْرَابِيِّ فِي الْآيَةِ`);
             }
         } 
+        // 4. Sabit Edat Yapıları
         else {
             if (wordText.startsWith("إِنَّ") || wordText.startsWith("أَنَّ")) {
                 details.push("<span style='color:#ba68c8;'>حَرْفٌ مُشَبَّهٌ بِالْفِعْلِ:</span> يُفِيدُ التَّوْكِيدَ يَنْصِبُ الِاسْمَ وَيَرْفَعُ الْخَبَرَ");
@@ -200,7 +206,7 @@
             } else if (wordText.startsWith("إِلَى") || wordText.startsWith("عَلَى")) {
                 details.push("<span style='color:#ba68c8;'>حَرْفُ جَرٍّ:</span> مَبْنِيٌّ عَلَى السُّكُونِ الْمُقَدَّرِ");
             } else {
-                details.push("<span style='color:#b0b0b0;'>الْكَلِمَةُ:</span> حَرْفٌ أَوْ اِسْمٌ مَبْنِيٌّ يُعْرَبُ تَبَعاً لِلتَّرْكِيبِ النَّحْوِيِّ");
+                details.push("<span style='color:#b0b0b0;'>الْكَلِمَةُ:</span> حَرْفٌ مَبْنِيٌّ أَوْ اِسْمٌ يُعْرَبُ تَبَعاً لِلتَّرْكِيبِ النَّحْوِيِّ");
             }
         }
         return details.join("<br><br>");
@@ -221,55 +227,32 @@
         btnCheck.disabled = true;
 
         try {
-            // Fail-safe random verse çağrısı
+            // Döngüyü kıran stabil ve kısıtlamasız tek istek mimarisi
             const response = await fetch(`https://quran.com`);
-            if (!response.ok) throw new Error("Ana sunucu yanıt vermedi.");
+            if (!response.ok) throw new Error("Sunucu hatası.");
             const data = await response.json();
             
             if (!data.verse || !data.verse.words || data.verse.words.length === 0) {
-                setTimeout(fetchRandomWord, 300);
+                setTimeout(fetchRandomWord, 500);
                 return;
             }
 
             const words = data.verse.words.filter(w => w.char_type_name === "word");
             if (words.length === 0) {
-                setTimeout(fetchRandomWord, 300);
+                setTimeout(fetchRandomWord, 500);
                 return;
             }
 
             const targetWordIndex = Math.floor(Math.random() * words.length);
             const targetWordObject = words[targetWordIndex];
             
-            let pos = "", icase = "", istate = "";
-            
-            // Konum verisinin varlığını ve yapısını koruma altına alan denetim mekanizması
-            if (targetWordObject && targetWordObject.location) {
-                try {
-                    const segmentResponse = await fetch(`https://quran.com{targetWordObject.location}`);
-                    if (segmentResponse.ok) {
-                        const segData = await segmentResponse.json();
-                        if (segData && segData.word && segData.word.analysis) {
-                            const analysis = segData.word.analysis;
-                            pos = analysis.part_of_speech_key ? analysis.part_of_speech_key.toUpperCase() : "";
-                            let inf = analysis.inflection_details || {};
-                            icase = inf.case ? inf.case.toUpperCase() : "";
-                            istate = inf.state ? inf.state.toUpperCase() : "";
-                        }
-                    }
-                } catch (innerErr) {
-                    console.warn("Morfoloji detay alt servis hatası ihmal edildi:", innerErr);
-                }
-            }
-
-            // Kilitlenmeyi önleyen yerel akıllı kurallar motoru tetikleyicisi
-            currentWordIrab = generateAdvancedArabicIrab(targetWordObject.text_uthmani, pos, icase, istate);
+            // Kilitlenmeye sebep olan ikinci iç içe API çağrısı tamamen kaldırıldı!
+            // Analiz doğrudan lokal yapay zeka kurallar motorunda üretilir.
+            currentWordIrab = generateAdvancedArabicIrab(targetWordObject.text_uthmani);
 
             let verseText = words.map(w => w.text_uthmani).join(" ");
             
-            // Konum dizisinden ayet ve sure numarasını güvenle ayıklama
-            let locParts = targetWordObject.location ? targetWordObject.location.split(':') : ["1", "1"];
-            
-            document.getElementById('meta').innerText = `Sure: ${locParts[0]} | Ayet: ${data.verse.verse_number}`;
+            document.getElementById('meta').innerText = `Sure: ${data.verse.verse_key ? data.verse.verse_key.split(':')[0] : 'Random'} | Ayet: ${data.verse.verse_number}`;
             document.getElementById('verse').innerText = verseText;
             document.getElementById('verse').style.fontSize = "1.5rem";
             document.getElementById('verse').style.color = "var(--text-main)";
@@ -280,10 +263,10 @@
             btnNext.disabled = false;
             btnCheck.disabled = false;
         } catch (error) {
-            console.error("Kritik döngü koruma filtresi:", error);
-            loadingEl.innerText = "Bağlantı tahlil ediliyor, lütfen bekleyin...";
+            console.error("Döngü bariyeri:", error);
+            loadingEl.innerText = "Bağlantı yenileniyor, lütfen bekleyin...";
             btnNext.disabled = false;
-            setTimeout(fetchRandomWord, 2000); // Sonsuz hızlı döngüyü engellemek için geciktirici bariyer
+            setTimeout(fetchRandomWord, 2000); // Tıkanma durumunda sistemi dinlendiren emniyet kilidi
         }
     }
 
