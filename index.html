@@ -1,213 +1,289 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>إعراب القرآن</title>
-    
-    <!-- iOS Web App Meta Tags -->
+    <title>Kur'an İrab Tahmin</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="إعراب">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/fluent/180/000000/quran.png">
-
     <style>
         :root {
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --primary: #27ae60;
-            --secondary: #2980b9;
-            --accent: #e67e22;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent: #2e7d32;
+            --accent-hover: #388e3c;
+            --text-main: #ffffff;
+            --text-muted: #b0b0b0;
+            --arabic-font: 'Traditional Arabic', 'Simplified Arabic', 'Noto Naskh Arabic', serif;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
             margin: 0;
             padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
-            box-sizing: border-box;
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-top: env(safe-area-inset-top);
+            padding: calc(20px + env(safe-area-inset-top)) 16px env(safe-area-inset-bottom) 16px;
         }
 
-        .container {
+        .app-container {
             width: 100%;
-            max-width: 375px; /* iPhone 12 mini width optimization */
-            padding: 20px;
-            box-sizing: border-box;
+            max-width: 343px; /* iPhone 12 mini ekran genişliği için optimize */
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        header {
             text-align: center;
+            padding: 8px 0;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
         }
 
         .card {
-            background: var(--card-bg);
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .meta-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            padding: 6px 12px;
             border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
+            display: inline-block;
+            align-self: center;
         }
 
-        .word-display {
-            font-size: 32px;
+        .verse-text {
+            font-family: var(--arabic-font);
+            font-size: 1.5rem;
+            line-height: 2.2rem;
+            direction: rtl;
+            color: var(--text-main);
+            word-wrap: break-word;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .target-word-container {
+            margin: 8px 0;
+        }
+
+        .target-word-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .target-word {
+            font-family: var(--arabic-font);
+            font-size: 2.4rem;
+            color: #4caf50;
             font-weight: bold;
-            color: var(--primary);
-            margin: 20px 0;
-            min-height: 50px;
+            direction: rtl;
         }
 
-        .verse-context {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-bottom: 15px;
-            font-style: italic;
+        .answer-box {
+            background-color: rgba(46, 125, 50, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
         }
 
-        .btn {
-            background-color: var(--primary);
+        .answer-box h3 {
+            font-size: 0.95rem;
+            color: #81c784;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(129, 199, 132, 0.2);
+            padding-bottom: 4px;
+        }
+
+        .answer-box p {
+            font-size: 0.9rem;
+            line-height: 1.4rem;
+            color: var(--text-main);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        button {
+            background-color: var(--accent);
             color: white;
             border: none;
             border-radius: 12px;
-            padding: 14px 24px;
-            font-size: 16px;
-            font-weight: bold;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: background-color 0.2s;
             width: 100%;
-            margin-bottom: 12px;
-            transition: background 0.2s;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        .btn-secondary {
-            background-color: var(--secondary);
-        }
-
-        .btn:active {
-            opacity: 0.9;
+        button:active {
+            background-color: var(--accent-hover);
             transform: scale(0.98);
         }
 
-        .irab-box {
-            background: #f8f9fa;
-            border-right: 4px solid var(--accent);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            text-align: right;
-            display: none;
-            font-size: 15px;
-            line-height: 1.6;
+        button.secondary {
+            background-color: #2c2c2e;
+            color: var(--text-main);
         }
 
-        .ai-badge {
-            display: inline-block;
-            background: #ffeaa7;
-            color: #d63031;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-weight: bold;
+        button.secondary:active {
+            background-color: #3a3a3c;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="card">
-            <span class="ai-badge">ذكاء اصطناعي ✦ AI</span>
-            <div class="verse-context" id="verse-text">اضغط على الزر للبدء</div>
-            <div class="word-display" id="word-text">...</div>
-            <div class="verse-context" id="source-text"></div>
+<div class="app-container">
+    <header>
+        <h1>Kur'an İrab Akademi AI</h1>
+        <p>Tüm kelimeleri kapsayan akıllı tahmin uygulaması</p>
+    </header>
+
+    <div class="card">
+        <div id="loading" class="loading">Ayet ve İrab Analizi Getiriliyor...</div>
+        
+        <div id="game-content" style="display: none;">
+            <div id="meta" class="meta-info">Sure: - | Ayet: -</div>
+            <div id="verse" class="verse-text"></div>
             
-            <div class="irab-box" id="irab-result"></div>
+            <div class="target-word-container">
+                <div class="target-word-label">Tahmin Edilecek Kelime:</div>
+                <div id="word" class="target-word"></div>
+            </div>
+
+            <div id="answer-box" class="answer-box">
+                <h3>Kelime İrab Analizi (AI)</h3>
+                <p id="irab-text"></p>
+            </div>
         </div>
 
-        <button class="btn" id="btn-next" onclick="nextWord()">كلمة عشوائية (Rastgele Kelime)</button>
-        <button class="btn btn-secondary" id="btn-check" onclick="checkIrab()" style="display:none;">تحقق من الإعراب (Kontrol Et)</button>
+        <div class="btn-group">
+            <button id="btn-next" onclick="fetchRandomWord()">Rastgele Kelime Seç</button>
+            <button id="btn-check" class="secondary" onclick="revealAnswer()" disabled>Kontrol Et</button>
+        </div>
     </div>
+</div>
 
-    <script>
-        // Yapay zeka modeli tarafından önceden analiz edilmiş ve uygulamaya gömülmüş veri havuzu (Örnektir, genişletilebilir)
-        const quranData = [
-            {
-                word: "ٱلْحَمْدُ",
-                context: "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ",
-                source: "الفاتحة: 2",
-                irab: "مبتدأ مرفوع وعلامة رفعه الضمة الظاهرة على آخره."
-            },
-            {
-                word: "ٱللَّهِ",
-                context: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
-                source: "الفاتحة: 1",
-                irab: "لفظ الجلالة، مضاف إليه مجرور وعلامة جره الكسرة الظاهرة تحت آخره."
-            },
-            {
-                word: "رَبِّ",
-                context: "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ",
-                source: "الفاتحة: 2",
-                irab: "نعت (صفة) لله مجرور وعلامة جره الكسرة الظاهرة وهو مضاف."
-            },
-            {
-                word: "ٱلْعَٰلَمِينَ",
-                context: "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ",
-                source: "الفاتحة: 2",
-                irab: "مضاف إليه مجرور وعلامة جره الياء لأنه ملحق بجمع المذكر السالم."
-            },
-            {
-                word: "ذَٰلِكَ",
-                context: "ذَٰلِكَ ٱلْكِتَٰبُ لَا رَيْبَ ۛ فِيهِ",
-                source: "البقرة: 2",
-                irab: "اسم إشارة مبني على السكون في محل رفع مبتدأ، واللام للبعد والكاف للخطاب."
-            },
-            {
-                word: "ٱلْكِتَٰبُ",
-                context: "ذَٰلِكَ ٱلْكِتَٰبُ لَا رَيْبَ ۛ فِيهِ",
-                source: "البقرة: 2",
-                irab: "بدل من اسم الإشارة مرفوع وعلامة رفعه الضمة الظاهرة."
-            },
-            {
-                word: "خَتَمَ",
-                context: "خَتَمَ ٱللَّهُ عَلَىٰ قُلُوبِهِمْ",
-                source: "البقرة: 7",
-                irab: "فعل ماضٍ مبني على الفتح الظاهر على آخره."
+<script>
+    // Toplam ayet sayılarını içeren liste (Rastgele ayet seçimi için emniyet matrisi)
+    const surahVerses = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
+
+    let currentWordIrab = "";
+
+    async function fetchRandomWord() {
+        const loadingEl = document.getElementById('loading');
+        const contentEl = document.getElementById('game-content');
+        const btnNext = document.getElementById('btn-next');
+        const btnCheck = document.getElementById('btn-check');
+        const answerBox = document.getElementById('answer-box');
+
+        // UI Sıfırlama ve Yükleme Durumu
+        answerBox.style.display = "none";
+        contentEl.style.display = "none";
+        loadingEl.style.display = "block";
+        btnNext.disabled = true;
+        btnCheck.disabled = true;
+
+        try {
+            // 1. Rastgele Sure ve Ayet Seçimi
+            const randomSurah = Math.floor(Math.random() * 114) + 1;
+            const maxVerses = surahVerses[randomSurah - 1];
+            const randomVerse = Math.floor(Math.random() * maxVerses) + 1;
+
+            // 2. Quran.com API'sinden ilgili ayetin kelimelerini ve morfolojisini çekme
+            const response = await fetch(`https://quran.com{randomSurah}:${randomVerse}?words=true&word_fields=text_uthmani,location&mushaf=1`);
+            const data = await response.json();
+            
+            if (!data.verse || !data.verse.words || data.verse.words.length <= 1) {
+                // Eğer kelime bulunamazsa tekrar dene
+                fetchRandomWord();
+                return;
             }
-        ];
 
-        let currentItem = null;
+            const words = data.verse.words.filter(w => w.char_type_name === "word");
+            if(words.length === 0) {
+                fetchRandomWord();
+                return;
+            }
 
-        function nextWord() {
-            // Rastgele kelime seçimi
-            const randomIndex = Math.floor(Math.random() * quranData.length);
-            currentItem = quranData[randomIndex];
+            // 3. Ayet içinden rastgele bir kelime seçme
+            const targetWordObject = words[Math.floor(Math.random() * words.length)];
             
-            // Arayüzü güncelle
-            document.getElementById('word-text').innerText = currentItem.word;
-            document.getElementById('verse-text').innerText = currentItem.context;
-            document.getElementById('source-text').innerText = currentItem.source;
-            
-            // İrab kutusunu gizle ve kontrol butonunu göster
-            document.getElementById('irab-result').style.display = 'none';
-            document.getElementById('btn-check').style.display = 'block';
-        }
+            // 4. Seçilen kelimenin irab verisini almak için morfoloji API'sine istek atma
+            const morphResponse = await fetch(`https://quran.com{targetWordObject.location}`);
+            const morphData = await morphResponse.json();
 
-        function checkIrab() {
-            if (!currentItem) return;
-            
-            // İrab sonucunu doldur ve göster
-            const irabBox = document.getElementById('irab-result');
-            irabBox.innerText = currentItem.irab;
-            irabBox.style.display = 'block';
-            
-            // Kontrol butonunu gizle
-            document.getElementById('btn-check').style.display = 'none';
-        }
-    </script>
-</body>
-</html>
+            // Ayet metnini oluşturma
+            let verseText = words.map(w => w.text_uthmani).join(" ");
+
+            // Bilgileri ekrana yerleştirme
+            document.getElementById('meta').innerText = `Sure: ${randomSurah} | Ayet: ${randomVerse}`;
+            document.getElementById('verse').innerText = verseText;
+            document.getElementById('word').innerText = targetWordObject.text_uthmani;
+
+            // İrab verisini işleme ve Türkçe anlamlı kalıba dökme
+            if (morphData.word && morphData.word.analysis) {
+                const analysis = morphData.word.analysis;
+                let details = [];
+                if(analysis.part_of_speech_key) details.push(`Kelime Türü: ${analysis.part_of_speech_key.toUpperCase()}`);
+                if(analysis.inflection_details) {
+                    const inf = analysis.inflection_details;
+                    if(inf.derived_form) details.push(`Bab/Form: ${inf.derived_form}`);
+                    if(inf.case) details.push(`İrab Durumu: ${inf.case.toUpperCase()}`);
+                    if(inf.state) details.push(`Hali: ${inf.state.toUpperCase()}`);
+                }
