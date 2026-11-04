@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>إعراب القرآن</title>
+    
+    <!-- iOS Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="إعراب">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluent/180/000000/quran.png">
+
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --primary: #27ae60;
+            --secondary: #2980b9;
+            --accent: #e67e22;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 375px; /* iPhone 12 mini width optimization */
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .word-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 20px 0;
+            min-height: 50px;
+        }
+
+        .verse-context {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 12px;
+            transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn:active {
+            opacity: 0.9;
+            transform: scale(0.98);
+        }
+
+        .irab-box {
+            background: #f8f9fa;
+            border-right: 4px solid var(--accent);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: right;
+            display: none;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .ai-badge {
+            display: inline-block;
+            background: #ffeaa7;
+            color: #d63031;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <span class="ai-badge">ذكاء اصطناعي ✦ AI</span>
+            <div class="verse-context" id="verse-text">اضغط على الزر للبدء</div>
+            <div class="word-display" id="word-text">...</div>
+            <div class="verse-context" id="source-text"></div>
+            
+            <div class="irab-box" id="irab-result"></div>
+        </div>
+
+        <button class="btn" id="btn-next" onclick="nextWord()">كلمة عشوائية (Rastgele Kelime)</button>
+        <button class="btn btn-secondary" id="btn-check" onclick="checkIrab()" style="display:none;">تحقق من الإعراب (Kontrol Et)</button>
+    </div>
+
+    <script>
+        // Yapay zeka modeli tarafından önceden analiz edilmiş ve uygulamaya gömülmüş veri havuzu (Örnektir, genişletilebilir)
+        const quranData = [
+            {
+                word: "ٱلْحَمْدُ",
+                context: "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ",
+                source: "الفاتحة: 2",
+                irab: "مبتدأ مرفوع وعلامة رفعه الضمة الظاهرة على آخره."
+            },
+            {
+                word: "ٱللَّهِ",
+                context: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+                source: "الفاتحة: 1",
+                irab: "لفظ الجلالة، مضاف إليه مجرور وعلامة جره الكسرة الظاهرة تحت آخره."
+            },
+            {
+                word: "رَبِّ",
+                context: "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ",
+                source: "الفاتحة: 2",
+                irab: "نعت (صفة) لله مجرور وعلامة جره الكسرة الظاهرة وهو مضاف."
+            },
+            {
+                word: "ٱلْعَٰلَمِينَ",
+                context: "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ",
+                source: "الفاتحة: 2",
+                irab: "مضاف إليه مجرور وعلامة جره الياء لأنه ملحق بجمع المذكر السالم."
+            },
+            {
+                word: "ذَٰلِكَ",
+                context: "ذَٰلِكَ ٱلْكِتَٰبُ لَا رَيْبَ ۛ فِيهِ",
+                source: "البقرة: 2",
+                irab: "اسم إشارة مبني على السكون في محل رفع مبتدأ، واللام للبعد والكاف للخطاب."
+            },
+            {
+                word: "ٱلْكِتَٰبُ",
+                context: "ذَٰلِكَ ٱلْكِتَٰبُ لَا رَيْبَ ۛ فِيهِ",
+                source: "البقرة: 2",
+                irab: "بدل من اسم الإشارة مرفوع وعلامة رفعه الضمة الظاهرة."
+            },
+            {
+                word: "خَتَمَ",
+                context: "خَتَمَ ٱللَّهُ عَلَىٰ قُلُوبِهِمْ",
+                source: "البقرة: 7",
+                irab: "فعل ماضٍ مبني على الفتح الظاهر على آخره."
+            }
+        ];
+
+        let currentItem = null;
+
+        function nextWord() {
+            // Rastgele kelime seçimi
+            const randomIndex = Math.floor(Math.random() * quranData.length);
+            currentItem = quranData[randomIndex];
+            
+            // Arayüzü güncelle
+            document.getElementById('word-text').innerText = currentItem.word;
+            document.getElementById('verse-text').innerText = currentItem.context;
+            document.getElementById('source-text').innerText = currentItem.source;
+            
+            // İrab kutusunu gizle ve kontrol butonunu göster
+            document.getElementById('irab-result').style.display = 'none';
+            document.getElementById('btn-check').style.display = 'block';
+        }
+
+        function checkIrab() {
+            if (!currentItem) return;
+            
+            // İrab sonucunu doldur ve göster
+            const irabBox = document.getElementById('irab-result');
+            irabBox.innerText = currentItem.irab;
+            irabBox.style.display = 'block';
+            
+            // Kontrol butonunu gizle
+            document.getElementById('btn-check').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
