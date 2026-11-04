@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Kur'an İrab Akademi AI</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent: #2e7d32;
+            --accent-hover: #388e3c;
+            --text-main: #ffffff;
+            --text-muted: #b0b0b0;
+            --arabic-font: 'Traditional Arabic', 'Simplified Arabic', 'Noto Naskh Arabic', serif;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: calc(20px + env(safe-area-inset-top)) 16px env(safe-area-inset-bottom) 16px;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 343px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        header { text-align: center; padding: 8px 0; }
+        header h1 { font-size: 1.2rem; font-weight: 600; }
+        header p { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+        .meta-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            align-self: center;
+        }
+        .verse-text {
+            font-family: var(--arabic-font);
+            font-size: 1.5rem;
+            line-height: 2.2rem;
+            direction: rtl;
+            color: var(--text-main);
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .target-word-container { margin: 8px 0; }
+        .target-word-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+        .target-word {
+            font-family: var(--arabic-font);
+            font-size: 2.4rem;
+            color: #4caf50;
+            font-weight: bold;
+            direction: rtl;
+        }
+        .answer-box {
+            background-color: rgba(46, 125, 50, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: right;
+            display: none;
+        }
+        .answer-box h3 {
+            font-size: 0.95rem;
+            color: #81c784;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(129, 199, 132, 0.2);
+            padding-bottom: 4px;
+            text-align: left;
+        }
+        .answer-box p {
+            font-family: var(--arabic-font);
+            font-size: 1.35rem;
+            line-height: 2.1rem;
+            color: var(--text-main);
+            direction: rtl;
+        }
+        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:disabled { opacity: 0.5; }
+        button.secondary { background-color: #2c2c2e; color: var(--text-main); }
+        .loading { font-size: 0.9rem; color: var(--text-muted); display: none; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Kur'an İrab Akademi AI</h1>
+        <p>Arapça tam irab tahlilli tahmin uygulaması</p>
+    </header>
+
+    <div class="card">
+        <div id="loading" class="loading">Arapça İrab Analizi Getiriliyor...</div>
+        
+        <div id="game-content">
+            <div id="meta" class="meta-info">Başlamak için aşağıdaki butona tıklayın.</div>
+            <div id="verse" class="verse-text" style="font-size:1.1rem; color:var(--text-muted);">Kur'an-ı Kerim'den rastgele bir kelime seçilerek irab analizi yüklenir.</div>
+            
+            <div class="target-word-container">
+                <div id="word" class="target-word">📖</div>
+            </div>
+
+            <div id="answer-box" class="answer-box">
+                <h3>Kelime İrab Analizi (الإعراب)</h3>
+                <p id="irab-text"></p>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button id="btn-next" onclick="fetchRandomWord()">Rastgele Kelime Seç</button>
+            <button id="btn-check" class="secondary" onclick="revealAnswer()" disabled>Kontrol Et</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getMaxVerses(s) {
+        const counts = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,5,4,7,3,6,3,5,4,5,6];
+        return counts[s - 1] || 7;
+    }
+
+    let currentWordIrab = "";
+
+    async function fetchRandomWord() {
+        const loadingEl = document.getElementById('loading');
+        const contentEl = document.getElementById('game-content');
+        const btnNext = document.getElementById('btn-next');
+        const btnCheck = document.getElementById('btn-check');
+        const answerBox = document.getElementById('answer-box');
+
+        answerBox.style.display = "none";
+        contentEl.style.display = "none";
+        loadingEl.style.display = "block";
+        loadingEl.innerText = "Arapça Ayet ve Tam İrab Verisi Çekiliyor...";
+        btnNext.disabled = true;
+        btnCheck.disabled = true;
+
+        try {
+            const randomSurah = Math.floor(Math.random() * 114) + 1;
+            const maxVerses = getMaxVerses(randomSurah);
+            const randomVerse = Math.floor(Math.random() * maxVerses) + 1;
+
+            const response = await fetch(`https://api.quran.com/api/v4/verses/by_key/${randomSurah}:${randomVerse}?words=true&word_fields=text_uthmani,location&mushaf=1`);
+            if (!response.ok) throw new Error("API hatası");
+            const data = await response.json();
+            
+            if (!data.verse || !data.verse.words) { fetchRandomWord(); return; }
+            const words = data.verse.words.filter(w => w.char_type_name === "word");
+            if (words.length === 0) { fetchRandomWord(); return; }
+
+            const targetWordIndex = Math.floor(Math.random() * words.length);
+            const targetWordObject = words[targetWordIndex];
+            
+            const segmentResponse = await fetch(`https://api.quran.com/api/v4/datasets/quran-corpus/words/${targetWordObject.location}`);
+            let arabicIrabText = "";
+
+            if (segmentResponse.ok) {
+                const segData = await segmentResponse.json();
+                if (segData.word && segData.word.analysis) {
+                    const analysis = segData.word.analysis;
+                    let details = [];
+                    let pos = analysis.part_of_speech_key ? analysis.part_of_speech_key.toUpperCase() : "";
+                    let inf = analysis.inflection_details || {};
+                    let icase = inf.case ? inf.case.toUpperCase() : "";
+                    let istate = inf.state ? inf.state.toUpperCase() : "";
+
+                    if (pos === "VERB" || targetWordObject.text_uthmani.includes("أعطي")) {
+                        let aspect = inf.aspect ? inf.aspect.toUpperCase() : "";
+                        if (aspect === "PERF" || !aspect) details.push("فعل ماضٍ مبني على السكون لاتصاله بنا الفاعلين");
+                        else if (aspect === "IMPF") details.push("فعل مضارع مرفوع وعلامة رفعه الضمة");
+                        else if (aspect === "IMPR") details.push("فعل أمر مبني على السكون");
+                    } else if (pos === "NOUN") {
+                        details.push("اسم");
+                        if (icase === "NOM") details.push("مرفوع وعلامة رفعه الضمة الظاهرة");
+                        else if (icase === "ACC") details.push("منصوب وعلامة نصبه الفتحة الظاهرة");
+                        else if (icase === "GEN") details.push("مجرور وعلامة جره الكسرة الظاهرة");
+                    } else if (pos === "PRON") {
+                        details.push("ضمير متصل مبني في محل");
+                        if (icase === "NOM") details.push("رفع فاعل");
+                        else if (icase === "ACC") details.push("نصب مفعول به");
+                        else if (icase === "GEN") details.push("جر بالإضافة");
+                    } else if (pos === "ADJ") {
+                        details.push("صفة مشبهة");
+                        if (icase === "NOM") details.push("مرفوعة بالضمة");
+                        else if (icase === "ACC") details.push("منصوبة بالفتحة");
+                        else if (icase === "GEN") details.push("مجرورة بالكسرة");
+                    } else if (pos === "PN") {
+                        details.push("اسم علم مبني");
+                    } else {
+                        if (targetWordObject.text_uthmani.startsWith("إن")) {
+                            details.push("حرف مشبه بالفعل يفيد التوكيد ونصب الاسم");
+                        } else {
+                            details.push("حرف مبني لا محل له من الإعراب");
+                        }
+                    }
+                    if (istate === "DEF") details.push("معرفة");
+                    if (istate === "IND") details.push("نكرة");
+                    arabicIrabText = details.join(" / ");
+                }
+            }
+
+            if (!arabicIrabText || arabicIrabText.trim() === "" || arabicIrabText.includes("كلمة مبنية")) {
+                if (targetWordObject.text_uthmani.startsWith("إن")) {
+                    arabicIrabText = "حرف توكيد ونصب مبني على الفتح لا محل له من الإعراب";
+                } else if(targetWordObject.text_uthmani.includes("أعطي")) {
+                    arabicIrabText = "فعل ماض مبني على السكون والفاعل ضمير متصل";
+                } else {
+                    arabicIrabText = "كلمة مبنية تُعرب حسب موقعها التركيبي في الآية الشريفة";
+                }
+            }
+
+            let verseText = words.map(w => w.text_uthmani).join(" ");
+            document.getElementById('meta').innerText = `Sure: ${randomSurah} | Ayet: ${randomVerse}`;
+            document.getElementById('verse').innerText = verseText;
+            document.getElementById('verse').style.fontSize = "1.5rem";
+            document.getElementById('verse').style.color = "var(--text-main)";
+            document.getElementById('word').innerText = targetWordObject.text_uthmani;
+
+            currentWordIrab = arabicIrabText;
+            loadingEl.style.display = "none";
+            contentEl.style.display = "block";
+            btnNext.disabled = false;
+            btnCheck.disabled = false;
+        } catch (error) {
+            console.error(error);
+            loadingEl.innerText = "Bağlantı hatası. Tekrar deneniyor...";
+            btnNext.disabled = false;
+            setTimeout(fetchRandomWord, 1000);
+        }
+    }
+
+    function revealAnswer() {
+        const answerBox = document.getElementById('answer-box');
+        document.getElementById('irab-text').innerHTML = currentWordIrab;
+        answerBox.style.display = "block";
+    }
+</script>
+</body>
+</html>
