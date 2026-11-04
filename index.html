@@ -287,3 +287,28 @@
                     if(inf.case) details.push(`İrab Durumu: ${inf.case.toUpperCase()}`);
                     if(inf.state) details.push(`Hali: ${inf.state.toUpperCase()}`);
                 }
+currentWordIrab = details.length > 0 ? details.join("
+") : "Bu kelime için detaylı irab analizi sunucu tarafından doğrudan sağlanamadı, kelimenin cümledeki konumunu inceleyiniz.";
+} else {
+currentWordIrab = "İrab analizi bu kelime için sistemde bulunamadı.";
+}
+// Yükleme bitti, arayüzü aç
+loadingEl.style.display = "none";
+contentEl.style.display = "block";
+btnNext.disabled = false;
+btnCheck.disabled = false;
+} catch (error) {
+console.error("Veri çekme hatası:", error);
+document.getElementById('loading').innerText = "Bağlantı hatası oluştu. Lütfen tekrar deneyin.";
+btnNext.disabled = false;
+}
+}
+function revealAnswer() {
+const answerBox = document.getElementById('answer-box');
+document.getElementById('irab-text').innerHTML = currentWordIrab;
+answerBox.style.display = "block";
+}
+// İlk açılışta otomatik bir kelime getir
+window.onload = () => {
+fetchRandomWord();
+};
