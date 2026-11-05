@@ -147,8 +147,6 @@
 </div>
 <script>
     let currentWordIrab = "";
-    // Tüm Kur'an'ın sure ayet haritası kilitlenmeyi önlemek için optimize edildi
-    const surahVerses =;
 
     function generateAdvancedArabicIrab(wordText, pos, icase, istate) {
         let cleanWord = wordText.replace(/[\u064B-\u0652]/g, ""); 
@@ -160,8 +158,8 @@
             details.push("<span style='color:#81c784;'>الْوَاوُ:</span> اِسْتِئْنَافِيَّةٌ أَوْ عَاطِفَةٌ مَبْنِيَّةٌ عَلَى الْفَتْحِ");
         }
         
-        if (wordText.startsWith("بِ") || wordText.startsWith("فَبِ") || wordText.startsWith("وَبِ")) {
-            details.push("<span style='color:#81c784;'>الْبَاءُ:</span> حَرْفُ جَرٍّ مَبْنِيٌّ عَلَى الْكَسْرِ");
+        if (wordText.startsWith("بِ") || wordText.startsWith("فَبِ") || wordText.startsWith("وَبِ") || wordText.startsWith("لِ")) {
+            details.push("<span style='color:#81c784;'>الْحَرْفُ:</span> حَرْفُ جَرٍّ مَبْنِيٌّ عَلَى الْكَسْرِ");
         }
 
         if (cleanWord.includes("كذب") || cleanWord.includes("قال") || cleanWord.includes("كان") || cleanWord.includes("فعل") || cleanWord.includes("جعل") || pos === "VERB" || wordText.includes("ُوهُ") || wordText.includes("ْتُ")) {
@@ -179,7 +177,7 @@
             } else if (wordText.endsWith("نَا") || cleanWord.endsWith("na")) {
                 details.push("<span style='color:#e57373;'>نَا:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ نَصْبِ مَفْعُولٍ بِهِ");
             } else if (wordText.endsWith("كَ") || wordText.endsWith("هُ") || wordText.includes("هُم")) {
-                details.push("<span style='color:#e57373;'>الضَّمِيرُ:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِي'' فِي مَحَلِّ نَصْبِ مَفْعُولٍ بِهِ");
+                details.push("<span style='color:#e57373;'>الضَّمِيرُ:</span> ضَمِيرٌ مُtَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ نَصْبِ مَفْعُولٍ بِهِ");
             }
         } 
         else if (pos === "NOUN" || wordText.startsWith("ال") || istate === "DEF") {
@@ -195,12 +193,10 @@
             }
         } 
         else {
-            if (wordText.startsWith("إِنَّ") || wordText.startsWith("أَنَّ")) {
+            if (wordText.startsWith("إِنَّ") || wordText.startsWith("أَنَّ") || wordText.startsWith("إِنَّا")) {
                 details.push("<span style='color:#ba68c8;'>حَرْفٌ مُشَبَّهٌ بِالْفِعْلِ:</span> يُفِيدُ التَّوْكِيدَ يَنْصِبُ الِاسْمَ وَيَرْفَعُ الْخَبَرَ");
             } else if (wordText.startsWith("مِنْ") || wordText.startsWith("عَنْ")) {
                 details.push("<span style='color:#ba68c8;'>حَرْفُ جَرٍّ:</span> مَبْنِيٌّ عَلَى السُّكُونِ لَا مَحَلَّ لَهُ مِنَ الْإِعْرَابِ");
-            } else if (wordText.startsWith("إِلَى") || wordText.startsWith("عَلَى")) {
-                details.push("<span style='color:#ba68c8;'>حَرْفُ جَرٍّ:</span> مَبْنِيٌّ عَلَى السُّكُونِ الْمُقَدَّرِ");
             } else {
                 details.push("<span style='color:#b0b0b0;'>الْكَلِمَةُ:</span> حَرْفٌ أَوْ اِسْمٌ مَبْنِيٌّ يُعْرَبُ تَبَعاً لِلتَّرْكِيبِ النَّحْوِيِّ");
             }
@@ -223,34 +219,28 @@
         btnCheck.disabled = true;
 
         try {
-            // 1. Aşama: Tüm Kur'an sınırlarında rastgele sure ve ayet seçimi
-            const randomSurah = Math.floor(Math.random() * 114) + 1;
-            const maxVerses = surahVerses[randomSurah - 1];
-            const randomVerse = Math.floor(Math.random() * maxVerses) + 1;
-
-            // CORS engellerini aşmak için açık kaynaklı güvenli Proxy tüneli entegrasyonu
+            // CORS kısıtlamalarını kaldıran modern açık proxy tüneli
             const proxyUrl = "https://corsproxy.io?";
-            const targetApiUrl = `https://quran.com{randomSurah}:${randomVerse}?words=true&mushaf=1`;
+            const targetApiUrl = "https://quran.com";
             
             const response = await fetch(proxyUrl + encodeURIComponent(targetApiUrl));
-            if (!response.ok) throw new Error("Proxy bağlantı hatası");
+            if (!response.ok) throw new Error("Ağ tüneli bağlantı hatası");
             const data = await response.json();
             
             if (!data || !data.verse || !data.verse.words) {
-                setTimeout(fetchRandomWord, 100);
+                setTimeout(fetchRandomWord, 300);
                 return;
             }
 
             const words = data.verse.words.filter(w => w.char_type_name === "word");
             if (words.length === 0) {
-                setTimeout(fetchRandomWord, 100);
+                setTimeout(fetchRandomWord, 300);
                 return;
             }
 
             const targetWordIndex = Math.floor(Math.random() * words.length);
             const targetWordObject = words[targetWordIndex];
             
-            // 2. Aşama: Morfoloji alt tahlili için Proxy korumalı ikinci katman çağrısı
             let pos = "", icase = "", istate = "";
             if (targetWordObject.location) {
                 try {
@@ -266,15 +256,15 @@
                             istate = inf.state ? inf.state.toUpperCase() : "";
                         }
                     }
-                } catch(e) { console.log("Alt analiz lokal motora devredildi."); }
+                } catch(e) { console.log("Alt analiz lokal kurallara devredildi."); }
             }
 
-            // Yapay zeka kurallar motorunu çalıştır
             currentWordIrab = generateAdvancedArabicIrab(targetWordObject.text_uthmani, pos, icase, istate);
 
             let verseText = words.map(w => w.text_uthmani).join(" ");
+            let displayKey = data.verse.verse_key || "Kur'an";
             
-            document.getElementById('meta').innerText = `Sure No: ${randomSurah} | Ayet No: ${randomVerse}`;
+            document.getElementById('meta').innerText = `Ayet Konumu: [${displayKey}] | Ayet No: ${data.verse.verse_number || '-'}`;
             document.getElementById('verse').innerText = verseText;
             document.getElementById('verse').style.fontSize = "1.5rem";
             document.getElementById('verse').style.color = "var(--text-main)";
@@ -285,13 +275,16 @@
             btnNext.disabled = false;
             btnCheck.disabled = false;
         } catch (error) {
-            console.error("Döngü bariyeri devrede:", error);
-            loadingEl.innerText = "Yapay zeka proxy hattı yenileniyor...";
+            console.error("Döngü emniyet filtresi:", error);
+            loadingEl.innerText = "Yapay zeka tüneli yenileniyor, lütfen 2 saniye bekleyin...";
             btnNext.disabled = false;
-            // Kısır döngüyü önleyen 2 saniyelik emniyet bariyeri
-            setTimeout(fetchRandomWord, 2000); 
+            setTimeout(fetchRandomWord, 2500); 
         }
     }
+
+    window.onload = () => {
+        fetchRandomWord();
+    };
 
     function revealAnswer() {
         const answerBox = document.getElementById('answer-box');
