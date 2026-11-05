@@ -99,7 +99,7 @@
         }
         .answer-box p {
             font-family: var(--arabic-font);
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             line-height: 1.9rem;
             color: var(--text-main);
             direction: rtl;
@@ -151,7 +151,6 @@
     let quranData = null;
     let currentWordIrab = "";
 
-    // Tüm Kur'an'ı içeren güvenli ve CORS uyumlu CDN JSON adresi
     async function initQuranDatabase() {
         try {
             const response = await fetch("https://cdn.jsdelivr.net/npm/quran-json@3.1.2/dist/quran.json");
@@ -162,37 +161,67 @@
             document.getElementById('game-content').style.display = "block";
             document.getElementById('btn-next').disabled = false;
             
-            // İlk kelimeyi otomatik seç
             pickRandomWordFromQuran();
         } catch (error) {
             console.error(error);
-            document.getElementById('loading').innerText = "Veritabanı yüklenirken bir hata oluştu. Sayfayı yenileyin.";
+            document.getElementById('loading').innerText = "Veritabanı yüklenirken hata oluştu. Sayfayı yenileyin.";
         }
     }
 
-    // Gelişmiş Dinamik İrab Üreteci (Kelimenin yapısına göre otomatik tahlil yapar)
+    // Geliştirilmiş Dinamik İrab Motoru (Kelime yapısını analiz eder)
     function generateAdvancedArabicIrab(wordText) {
-        let cleanWord = wordText.replace(/[\u064B-\u0652]/g, ""); 
         let details = [];
+        let cleanWord = wordText.replace(/[\u064B-\u0652]/g, "");
 
+        // 1. Edatlar ve Harfler (Atıf ve Cer)
         if (wordText.startsWith("فَ") || wordText.startsWith("فُ") || wordText.startsWith("فِ")) {
-            details.push("<span style='color:#81c784;'>الْفَاءُ:</span> حَسَبَ مَا قَبْلَهَا أَوْ عَاطِفَةٌ مَبْنِيَّةٌ عَلَى الْفَتْحِ");
+            details.push("<span style='color:#81c784;'>الْفَاءُ:</span> حَرْفُ عَطْفٍ أَوْ اسْتِئْنَافٍ مَبْنِيٌّ عَلَى الْفَتْحِ لَا مَحَلَّ لَهُ مِنَ الْإِعْرَابِ");
         } else if (wordText.startsWith("وَ") || wordText.startsWith("وُ") || wordText.startsWith("وِ")) {
-            details.push("<span style='color:#81c784;'>الْوَاوُ:</span> اِسْتِئْنَافِيَّةٌ أَوْ عَاطِفَةٌ مَبْنِيَّةٌ عَلَى الْفَتْحِ");
-        }
-        
-        if (wordText.startsWith("بِ") || wordText.startsWith("فَبِ") || wordText.startsWith("وَبِ") || wordText.startsWith("لِ")) {
-            details.push("<span style='color:#81c784;'>الْحَرْفُ:</span> حَرْفُ جَرٍّ مَبْنِيٌّ عَلَى الْكَسْرِ لَا مَحَلَّ لَهُ");
+            details.push("<span style='color:#81c784;'>الْوَاوُ:</span> حَرْفُ عَطْفٍ أَوْ قَسَمٍ وَاسْتِئْنَافٍ مَبْنِيٌّ عَلَى الْفَتْحِ");
         }
 
-        if (wordText.endsWith("ونَ") || wordText.endsWith("ينَ")) {
-            details.push("<span style='color:#64b5f6;'>الْجَمْعُ:</span> جَمْعُ مُذَكَّرٍ سَالِمٌ يُرْفَعُ بِالْوَاوِ وَيُنْصَبُ وَيُجَرُّ بِالْيَاءِ");
-        } else if (wordText.startsWith("ال")) {
-            details.push("<span style='color:#64b5f6;'>اِسْمٌ مُعَرَّفٌ بِأَلْ:</span> مُعْرَبٌ ظَاهِرُ الـحَرَكَةِ حَسَبَ مَوْقِعِهِ فِي الْآيَةِ");
-        } else if (wordText.endsWith("ها") || wordText.endsWith("هم") || wordText.endsWith("ك")) {
-            details.push("<span style='color:#ffb74d;'>الضَّمِيرُ:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ جَرِّ مُضَافٍ إِلَيْهِ أَوْ نَصْبِ مَفْعُولٍ");
+        if (wordText.startsWith("بِ") || wordText.startsWith("فَبِ") || wordText.startsWith("وَبِ")) {
+            details.push("<span style='color:#81c784;'>الْبَاءُ:</span> حَرْفُ جَرٍّ مَبْنِيٌّ عَلَى الْكَسْرِ لَا مَحَلَّ لَهُ");
+        } else if (wordText.startsWith("لِ") || wordText.startsWith("وَلِ")) {
+            details.push("<span style='color:#81c784;'>اللَّامُ:</span> حَرْفُ جَرٍّ أَوْ لَامُ التَّعْلِيلِ مَبْنِيٌّ عَلَى الْكَسْرِ");
+        }
+
+        // 2. İsim / Sıfat / Kelime Hali Analizi
+        if (wordText.startsWith("ال")) {
+            if (wordText.endsWith("ِ") || wordText.endsWith("ٍ") || wordText.endsWith("ِهَا") || wordText.endsWith("ِهِمْ")) {
+                details.push("<span style='color:#64b5f6;'>اِسْمٌ مَعْرُوفٌ بِأَلْ:</span> مَجْرُورٌ وَعَلَامَةُ جَرِّهِ الْكَسْرَةُ الظَّاهِرَةُ فِي آخِرِهِ");
+            } else if (wordText.endsWith("ُ") || wordText.endsWith("ٌ")) {
+                details.push("<span style='color:#64b5f6;'>اِسْمٌ مَعْرُوفٌ بِأَلْ:</span> مَرْفُوعٌ وَعَلَامَةُ رَفْعِهِ الضَّمَّةُ الظَّاهِرَةُ");
+            } else if (wordText.endsWith("َ") || wordText.endsWith("ً")) {
+                details.push("<span style='color:#64b5f6;'>اِسْمٌ مَعْرُوفٌ بِأَلْ:</span> مَنْصُوبٌ وَعَلَامَةُ نَصْبِهِ الْفَتْحَةُ الظَّاهِرَةُ");
+            } else {
+                details.push("<span style='color:#64b5f6;'>اِسْمٌ مَعْرُوفٌ بِأَلْ:</span> مُعْرَبٌ حَسَبَ مَوْقِعِهِ فِي التَّرْكِيبِ النَّحْوِيِّ");
+            }
+        } 
+        // 3. Zamir Ekleri Analizi (Örn: -ha, -hum, -ke, -ni)
+        else if (wordText.endsWith("هَا") || wordText.endsWith("هَا") || cleanWord.endsWith("ها")) {
+            details.push("<span style='color:#ffb74d;'>الْهَاءُ وَالأَلِفُ:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ جَرٍّ مُضَافٍ إِلَيْهِ أَوْ نَصْبٍ مَفْعُولٌ بِهِ");
+        } else if (wordText.endsWith("هُمْ") || cleanWord.endsWith("هم")) {
+            details.push("<span style='color:#ffb74d;'>هُمْ:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ جَرٍّ مُضَافٍ إِلَيْهِ");
+        } else if (wordText.endsWith("كَ") || wordText.endsWith("كِ")) {
+            details.push("<span style='color:#ffb74d;'>كَافُ الْخِطَابِ:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ جَرٍّ أَوْ نَصْبٍ");
+        } 
+        // 4. Fiil ve Diğer Yapılar
+        else if (wordText.endsWith("ونَ") || wordText.endsWith("ُونَ")) {
+            details.push("<span style='color:#e57373;'>الْفِعْلُ أَوْ الْجَمْعُ:</span> مَرْفُوعٌ وَعَلَامَةُ رَفْعِهِ الْوَاوُ لِأَنَّهُ جَمْعُ مُذَكَّرٍ سَالِمٌ أَوْ مِنَ الْأَفْعَالِ الْخَمْسَةِ");
+        } else if (wordText.endsWith("ينَ") || wordText.endsWith("ِينَ")) {
+            details.push("<span style='color:#e57373;'>الْكَلِمَةُ:</span> مَنْصُوبٌ أَوْ مَجْرُورٌ وَعَلَامَةُ جَرِّهِ أَوْ نَصْبِهِ الْيَاءُ بَدلَ الْحَرَكَةِ");
         } else {
-            details.push("<span style='color:#64b5f6;'>الْكَلِمَةُ:</span> تُعْرَبُ حَسَبَ مُقتَضَيَاتِ التَّرْكِيبِ النَّحْوِيِّ وَالسِّيَاقِ الْقُرْآنِيِّ");
+            // Varsayılan genel yapı ama kelimeye özel hareke tespiti eklenmiş hali
+            if (wordText.endsWith("ُ") || wordText.endsWith("ٌ")) {
+                details.push("<span style='color:#64b5f6;'>كَلِمَةٌ مُعْرَبَةٌ:</span> مَرْفُوعَةٌ وَعَلَامَةُ رَفْعِهَا الضَّمَّةُ الظَّاهِرَةُ عَلَى آخِرِهَا");
+            } else if (wordText.endsWith("َ") || wordText.endsWith("ً")) {
+                details.push("<span style='color:#64b5f6;'>كَلِمَةٌ مُعْرَبَةٌ:</span> مَنْصُوبَةٌ وَعَلَامَةُ نَصْبِهَا الْفَتْحَةُ الظَّاهِرَةُ");
+            } else if (wordText.endsWith("ِ") || wordText.endsWith("ٍ")) {
+                details.push("<span style='color:#64b5f6;'>كَلِمَةٌ مُعْرَبَةٌ:</span> مَجْرُورَةٌ وَعَلَامَةُ جَرِّهَا الْكَسْرَةُ الظَّاهِرَةُ");
+            } else {
+                details.push("<span style='color:#ba68c8;'>الْبِنْيَةُ الصَّرْفِيَّةُ:</span> كَلِمَةٌ مَبْنِيَّةٌ أَوْ مُعْرَبَةٌ تُقَدَّرُ فِيهَا الْحَرَكَاتُ لِلتَّعَذُّرِ أَوِ الِاسْتِثْقَالِ");
+            }
         }
 
         return details.join("<br><br>");
@@ -204,28 +233,23 @@
         const answerBox = document.getElementById('answer-box');
         answerBox.style.display = "none";
 
-        // 1. Rastgele bir Sûre seç (0 - 113)
         const randomSurahIndex = Math.floor(Math.random() * quranData.length);
         const surah = quranData[randomSurahIndex];
 
-        // 2. O sûreden rastgele bir Ayet seç
         const randomVerseIndex = Math.floor(Math.random() * surah.verses.length);
         const verseObject = surah.verses[randomVerseIndex];
 
-        // 3. Ayet metnini kelimelerine böl
         const words = verseObject.text.trim().split(/\s+/);
         if (words.length === 0) {
             pickRandomWordFromQuran();
             return;
         }
 
-        // 4. Rastgele bir hedef kelime seç
         const targetWordIndex = Math.floor(Math.random() * words.length);
         const targetWord = words[targetWordIndex];
 
         currentWordIrab = generateAdvancedArabicIrab(targetWord);
 
-        // Arayüze yansıt
         document.getElementById('meta').innerText = `Sûre: ${surah.name} (${surah.transliteration}) | Ayet: ${verseObject.id}`;
         document.getElementById('verse').innerText = verseObject.text;
         document.getElementById('word').innerText = targetWord;
@@ -238,7 +262,6 @@
         answerBox.style.display = "block";
     }
 
-    // Sayfa açıldığında JSON veritabanını indirip başlat
     window.onload = () => {
         initQuranDatabase();
     };
