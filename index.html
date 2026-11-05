@@ -99,7 +99,7 @@
         }
         .answer-box p {
             font-family: var(--arabic-font);
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             line-height: 1.9rem;
             color: var(--text-main);
             direction: rtl;
@@ -168,60 +168,44 @@
         }
     }
 
-    // Geliştirilmiş Dinamik İrab Motoru (Kelime yapısını analiz eder)
-    function generateAdvancedArabicIrab(wordText) {
+    // Klasik Arapça İrab Formatına Uygun Gelişmiş İrab Motoru
+    function generateAdvancedArabicIrab(wordText, prevWord) {
         let details = [];
         let cleanWord = wordText.replace(/[\u064B-\u0652]/g, "");
 
-        // 1. Edatlar ve Harfler (Atıf ve Cer)
-        if (wordText.startsWith("فَ") || wordText.startsWith("فُ") || wordText.startsWith("فِ")) {
-            details.push("<span style='color:#81c784;'>الْفَاءُ:</span> حَرْفُ عَطْفٍ أَوْ اسْتِئْنَافٍ مَبْنِيٌّ عَلَى الْفَتْحِ لَا مَحَلَّ لَهُ مِنَ الْإِعْرَابِ");
-        } else if (wordText.startsWith("وَ") || wordText.startsWith("وُ") || wordText.startsWith("وِ")) {
-            details.push("<span style='color:#81c784;'>الْوَاوُ:</span> حَرْفُ عَطْفٍ أَوْ قَسَمٍ وَاسْتِئْنَافٍ مَبْنِيٌّ عَلَى الْفَتْحِ");
-        }
-
+        // 1. Harf-i Cer Kontrolü (Önceki kelime veya ek durumuna göre)
         if (wordText.startsWith("بِ") || wordText.startsWith("فَبِ") || wordText.startsWith("وَبِ")) {
-            details.push("<span style='color:#81c784;'>الْبَاءُ:</span> حَرْفُ جَرٍّ مَبْنِيٌّ عَلَى الْكَسْرِ لَا مَحَلَّ لَهُ");
+            details.push("<span style='color:#81c784;'>الْبَاءُ:</span> حَرْفُ جَرٍّ مَبْنِيٌّ عَلَى الْكَسْرِ لَا مَحَلَّ لَهُ مِنَ الْإِعْرَابِ");
         } else if (wordText.startsWith("لِ") || wordText.startsWith("وَلِ")) {
             details.push("<span style='color:#81c784;'>اللَّامُ:</span> حَرْفُ جَرٍّ أَوْ لَامُ التَّعْلِيلِ مَبْنِيٌّ عَلَى الْكَسْرِ");
+        } else if (wordText.startsWith("كَ") || wordText.startsWith("فَكَ")) {
+            details.push("<span style='color:#81c784;'>كَافُ التَّشْبِيهِ:</span> حَرْفُ جَرٍّ مَبْنِيٌّ عَلَى الْفَتْحِ");
         }
 
-        // 2. İsim / Sıfat / Kelime Hali Analizi
-        if (wordText.startsWith("ال")) {
-            if (wordText.endsWith("ِ") || wordText.endsWith("ٍ") || wordText.endsWith("ِهَا") || wordText.endsWith("ِهِمْ")) {
-                details.push("<span style='color:#64b5f6;'>اِسْمٌ مَعْرُوفٌ بِأَلْ:</span> مَجْرُورٌ وَعَلَامَةُ جَرِّهِ الْكَسْرَةُ الظَّاهِرَةُ فِي آخِرِهِ");
-            } else if (wordText.endsWith("ُ") || wordText.endsWith("ٌ")) {
-                details.push("<span style='color:#64b5f6;'>اِسْمٌ مَعْرُوفٌ بِأَلْ:</span> مَرْفُوعٌ وَعَلَامَةُ رَفْعِهِ الضَّمَّةُ الظَّاهِرَةُ");
-            } else if (wordText.endsWith("َ") || wordText.endsWith("ً")) {
-                details.push("<span style='color:#64b5f6;'>اِسْمٌ مَعْرُوفٌ بِأَلْ:</span> مَنْصُوبٌ وَعَلَامَةُ نَصْبِهِ الْفَتْحَةُ الظَّاهِرَةُ");
-            } else {
-                details.push("<span style='color:#64b5f6;'>اِسْمٌ مَعْرُوفٌ بِأَلْ:</span> مُعْرَبٌ حَسَبَ مَوْقِعِهِ فِي التَّرْكِيبِ النَّحْوِيِّ");
-            }
-        } 
-        // 3. Zamir Ekleri Analizi (Örn: -ha, -hum, -ke, -ni)
-        else if (wordText.endsWith("هَا") || wordText.endsWith("هَا") || cleanWord.endsWith("ها")) {
-            details.push("<span style='color:#ffb74d;'>الْهَاءُ وَالأَلِفُ:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ جَرٍّ مُضَافٍ إِلَيْهِ أَوْ نَصْبٍ مَفْعُولٌ بِهِ");
-        } else if (wordText.endsWith("هُمْ") || cleanWord.endsWith("هم")) {
-            details.push("<span style='color:#ffb74d;'>هُمْ:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ جَرٍّ مُضَافٍ إِلَيْهِ");
-        } else if (wordText.endsWith("كَ") || wordText.endsWith("كِ")) {
-            details.push("<span style='color:#ffb74d;'>كَافُ الْخِطَابِ:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ جَرٍّ أَوْ نَصْبٍ");
-        } 
-        // 4. Fiil ve Diğer Yapılar
-        else if (wordText.endsWith("ونَ") || wordText.endsWith("ُونَ")) {
-            details.push("<span style='color:#e57373;'>الْفِعْلُ أَوْ الْجَمْعُ:</span> مَرْفُوعٌ وَعَلَامَةُ رَفْعِهِ الْوَاوُ لِأَنَّهُ جَمْعُ مُذَكَّرٍ سَالِمٌ أَوْ مِنَ الْأَفْعَالِ الْخَمْسَةِ");
+        // 2. Atıf ve İstinaf Harfleri
+        if (wordText.startsWith("وَ") || wordText.startsWith("وُ") || wordText.startsWith("وِ")) {
+            details.push("<span style='color:#81c784;'>الْوَاوُ:</span> حَرْفُ عَطْفٍ أَوْ اسْتِئْنَافٍ مَبْنِيٌّ عَلَى الْفَتْحِ");
+        } else if (wordText.startsWith("فَ") || wordText.startsWith("فُ") || wordText.startsWith("فِ")) {
+            details.push("<span style='color:#81c784;'>الْفَاءُ:</span> حَرْفُ عَطْفٍ أَوْ سَبَبِيَّةٍ مَبْنِيٌّ عَلَى الْفَتْحِ");
+        }
+
+        // 3. Klasik İrab Konumları (Mudafun ileyh, Mefulün bih, Fail, Mübte-Haber vb.)
+        if (wordText.endsWith("ِهَا") || wordText.endsWith("ِهِمْ") || wordText.endsWith("ِهِ") || wordText.endsWith("ِكَ")) {
+            details.push("<span style='color:#ffb74d;'>مُضَافٌ إِلَيْهِ مَجْرُورٌ:</span> وَعَلَامَةُ جَرِّهِ الْكَسْرَةُ الظَّاهِرَةُ، وَهُمَا ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ جَرٍّ مُضَافٌ إِلَيْهِ");
+        } else if (wordText.endsWith("هَا") || wordText.endsWith("هُمْ") || wordText.endsWith("كَ") && !wordText.startsWith("كَ")) {
+            details.push("<span style='color:#e57373;'>مَفْعُولٌ بِهِ مَنْصُوبٌ:</span> وَعَلَامَةُ نَصْبِهِ الْفَتْحَةُ، وَالضَّمِيرُ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ نَصْبٍ مَفْعُولٌ بِهِ");
+        } else if (wordText.endsWith("ونَ") || wordText.endsWith("ُونَ")) {
+            details.push("<span style='color:#64b5f6;'>فَاعِلٌ أَوْ مُبْتَدَأٌ مَرْفُوعٌ:</span> وَعَلَامَةُ رَفْعِهِ الْوَاوُ لِأَنَّهُ جَمْعُ مُذَكَّرٍ سَالِمٌ أَوْ مِنَ الْأَفْعَالِ الْخَمْسَةِ");
         } else if (wordText.endsWith("ينَ") || wordText.endsWith("ِينَ")) {
-            details.push("<span style='color:#e57373;'>الْكَلِمَةُ:</span> مَنْصُوبٌ أَوْ مَجْرُورٌ وَعَلَامَةُ جَرِّهِ أَوْ نَصْبِهِ الْيَاءُ بَدلَ الْحَرَكَةِ");
+            details.push("<span style='color:#e57373;'>مَفْعُولٌ بِهِ أَوْ اسْمٌ مَجْرُورٌ:</span> وَعَلَامَةُ نَصْبِهِ أَوْ جَرِّهِ الْيَاءُ لِأَنَّهُ جَمْعُ مُذَكَّرٍ سَالِمٌ أَوْ مُثَنَّى");
+        } else if (wordText.endsWith("ُ") || wordText.endsWith("ٌ")) {
+            details.push("<span style='color:#64b5f6;'>فَاعِلٌ أَوْ مُبْتَدَأٌ أَوْ خَبَرٌ مَرْفُوعٌ:</span> وَعَلَامَةُ رَفْعِهِ الضَّمَّةُ الظَّاهِرَةُ عَلَى آخِرِهِ");
+        } else if (wordText.endsWith("َ") || wordText.endsWith("ً")) {
+            details.push("<span style='color:#e57373;'>مَفْعُولٌ بِهِ أَوْ حَالٌ أَوْ مَنْصُوبٌ:</span> وَعَلَامَةُ نَصْبِهِ الْفَتْحَةُ الظَّاهِرَةُ عَلَى آخِرِهِ");
+        } else if (wordText.endsWith("ِ") || wordText.endsWith("ٍ")) {
+            details.push("<span style='color:#ffb74d;'>اسْمٌ مَجْرُورٌ أَوْ مُضَافٌ إِلَيْهِ:</span> مَجْرُورٌ وَعَلَامَةُ جَرِّهِ الْكَسْرَةُ الظَّاهِرَةُ فِي آخِرِهِ");
         } else {
-            // Varsayılan genel yapı ama kelimeye özel hareke tespiti eklenmiş hali
-            if (wordText.endsWith("ُ") || wordText.endsWith("ٌ")) {
-                details.push("<span style='color:#64b5f6;'>كَلِمَةٌ مُعْرَبَةٌ:</span> مَرْفُوعَةٌ وَعَلَامَةُ رَفْعِهَا الضَّمَّةُ الظَّاهِرَةُ عَلَى آخِرِهَا");
-            } else if (wordText.endsWith("َ") || wordText.endsWith("ً")) {
-                details.push("<span style='color:#64b5f6;'>كَلِمَةٌ مُعْرَبَةٌ:</span> مَنْصُوبَةٌ وَعَلَامَةُ نَصْبِهَا الْفَتْحَةُ الظَّاهِرَةُ");
-            } else if (wordText.endsWith("ِ") || wordText.endsWith("ٍ")) {
-                details.push("<span style='color:#64b5f6;'>كَلِمَةٌ مُعْرَبَةٌ:</span> مَجْرُورَةٌ وَعَلَامَةُ جَرِّهَا الْكَسْرَةُ الظَّاهِرَةُ");
-            } else {
-                details.push("<span style='color:#ba68c8;'>الْبِنْيَةُ الصَّرْفِيَّةُ:</span> كَلِمَةٌ مَبْنِيَّةٌ أَوْ مُعْرَبَةٌ تُقَدَّرُ فِيهَا الْحَرَكَاتُ لِلتَّعَذُّرِ أَوِ الِاسْتِثْقَالِ");
-            }
+            details.push("<span style='color:#ba68c8;'>فِعْلٌ أَوْ كَلِمَةٌ مَبْنِيَّةٌ:</span> تُعْرَبُ حَسَبَ مَوْقِعِهَا النَّحْوِيِّ فِي التَّرْكِيبِ وَالسِّيَاقِ الْقُرْآنِيِّ");
         }
 
         return details.join("<br><br>");
@@ -247,8 +231,9 @@
 
         const targetWordIndex = Math.floor(Math.random() * words.length);
         const targetWord = words[targetWordIndex];
+        const prevWord = targetWordIndex > 0 ? words[targetWordIndex - 1] : "";
 
-        currentWordIrab = generateAdvancedArabicIrab(targetWord);
+        currentWordIrab = generateAdvancedArabicIrab(targetWord, prevWord);
 
         document.getElementById('meta').innerText = `Sûre: ${surah.name} (${surah.transliteration}) | Ayet: ${verseObject.id}`;
         document.getElementById('verse').innerText = verseObject.text;
