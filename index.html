@@ -115,7 +115,7 @@
             cursor: pointer;
             width: 100%;
         }
-        button:disabled { opacity: 0.5; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         button.secondary { background-color: #2c2c2e; color: var(--text-main); }
         .loading { font-size: 0.9rem; color: var(--text-muted); display: none; }
     </style>
@@ -148,7 +148,7 @@
 <script>
     let currentWordIrab = "";
 
-    function generateAdvancedArabicIrab(wordText, pos, icase, istate) {
+    function generateAdvancedArabicIrab(wordText) {
         let cleanWord = wordText.replace(/[\u064B-\u0652]/g, ""); 
         let details = [];
 
@@ -162,44 +162,17 @@
             details.push("<span style='color:#81c784;'>الْحَرْفُ:</span> حَرْفُ جَرٍّ مَبْنِيٌّ عَلَى الْكَسْرِ");
         }
 
-        if (cleanWord.includes("كذب") || cleanWord.includes("قال") || cleanWord.includes("كان") || cleanWord.includes("فعل") || cleanWord.includes("جعل") || pos === "VERB" || wordText.includes("ُوهُ") || wordText.includes("ْتُ")) {
+        if (cleanWord.includes("قال") || cleanWord.includes("كان") || cleanWord.includes("فعل") || cleanWord.includes("جعل") || wordText.includes("ُوهُ") || wordText.includes("ْتُ")) {
             if (cleanWord.includes("وا") || wordText.includes("ُوهُ") || wordText.includes("ُون")) {
                 details.push("<span style='color:#64b5f6;'>الْفِعْلُ:</span> فِعْلٌ مَاضٍ مَبْنِيٌّ عَلَى الضَّمِّ لِاتِّصَالِهِ بِوَاوِ الْجَمَاعَةِ");
                 details.push("<span style='color:#ffb74d;'>الْوَاوُ:</span> وَاوُ الْجَمَاعَةِ ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ رَفْعِ فَاعِلٍ");
-            } else if (wordText.includes("تَ") || wordText.includes("تْ")) {
-                details.push("<span style='color:#64b5f6;'>الْفِعْلُ:</span> فِعْلٌ مَاضٍ مَبْنِيٌّ عَلَى الْفَتْحِ وَالتَّاءُ لِلتَّأْنِيثِ / الْفَاعِلِ");
             } else {
                 details.push("<span style='color:#64b5f6;'>الْفِعْلُ:</span> فِعْلٌ مَاضٍ مَبْنِيٌّ عَلَى الْفَتْحِ الظَّاهِرِ");
             }
-            
-            if (wordText.endsWith("هُمَا") || cleanWord.endsWith("هما")) {
-                details.push("<span style='color:#e57373;'>هُمَا:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ نَصْبِ مَفْعُولٍ بِهِ");
-            } else if (wordText.endsWith("نَا") || cleanWord.endsWith("na")) {
-                details.push("<span style='color:#e57373;'>نَا:</span> ضَمِيرٌ مُتَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ نَصْبِ مَفْعُولٍ بِهِ");
-            } else if (wordText.endsWith("كَ") || wordText.endsWith("هُ") || wordText.includes("هُم")) {
-                details.push("<span style='color:#e57373;'>الضَّمِيرُ:</span> ضَمِيرٌ مُtَّصِلٌ مَبْنِيٌّ فِي مَحَلِّ نَصْبِ مَفْعُولٍ بِهِ");
-            }
-        } 
-        else if (pos === "NOUN" || wordText.startsWith("ال") || istate === "DEF") {
-            let label = wordText.startsWith("ال") ? "اِسْمٌ مُعَرَّفٌ بِأَلْ" : "اِسْمٌ";
-            if (icase === "NOM" || wordText.endsWith("ُ") || wordText.endsWith("ٌ")) {
-                details.push(`<span style='color:#64b5f6;'>${label}:</span> مَرْفُوعٌ وَعَلَامَةُ رَفْعِهِ الضَّمَّةُ أَوْ الْوَاوُ`);
-            } else if (icase === "ACC" || wordText.endsWith("َ") || wordText.endsWith("ً")) {
-                details.push(`<span style='color:#64b5f6;'>${label}:</span> مَنْصُوبٌ وَعَلَامَةُ نَصْبِهِ الْفَتْحَةُ الظَّاهِرَةُ`);
-            } else if (icase === "GEN" || wordText.endsWith("ِ") || wordText.endsWith("ٍ") || wordText.endsWith("ينَ")) {
-                details.push(`<span style='color:#64b5f6;'>${label}:</span> مَجْرُورٌ وَعَلَامَةُ جَرِّهِ الْكَسْرَةُ أَوْ الْيَاءُ`);
-            } else {
-                details.push(`<span style='color:#64b5f6;'>${label}:</span> مُعْرَبٌ حَسَبَ مَوْقِعِهِ الْإِعْرَابِيِّ فِي الْآيَةِ`);
-            }
-        } 
-        else {
-            if (wordText.startsWith("إِنَّ") || wordText.startsWith("أَنَّ") || wordText.startsWith("إِنَّا")) {
-                details.push("<span style='color:#ba68c8;'>حَرْفٌ مُشَبَّهٌ بِالْفِعْلِ:</span> يُفِيدُ التَّوْكِيدَ يَنْصِبُ الِاسْمَ وَيَرْفَعُ الْخَبَرَ");
-            } else if (wordText.startsWith("مِنْ") || wordText.startsWith("عَنْ")) {
-                details.push("<span style='color:#ba68c8;'>حَرْفُ جَرٍّ:</span> مَبْنِيٌّ عَلَى السُّكُونِ لَا مَحَلَّ لَهُ مِنَ الْإِعْرَابِ");
-            } else {
-                details.push("<span style='color:#b0b0b0;'>الْكَلِمَةُ:</span> حَرْفٌ أَوْ اِسْمٌ مَبْنِيٌّ يُعْرَبُ تَبَعاً لِلتَّرْكِيبِ النَّحْوِيِّ");
-            }
+        } else if (wordText.startsWith("ال")) {
+            details.push("<span style='color:#64b5f6;'>اِسْمٌ مُعَرَّفٌ بِأَلْ:</span> مُعْرَبٌ حَسَبَ مَوْقِعِهِ الْإِعْرَابِيِّ فِي الْآيَةِ");
+        } else {
+            details.push("<span style='color:#b0b0b0;'>الْكَلِمَةُ:</span> حَرْفٌ أَوْ اِسْمٌ كَرِيمٌ يُعْرَبُ حَسَبَ تَرْكِيبِهِ النَّحْوِيِّ");
         }
         return details.join("<br><br>");
     }
@@ -214,24 +187,27 @@
         answerBox.style.display = "none";
         contentEl.style.display = "none";
         loadingEl.style.display = "block";
-        loadingEl.innerText = "Tüm Kur'an'dan Ayet ve Analiz Getiriliyor...";
+        loadingEl.innerText = "Kur'an'dan Ayet ve Kelime Yükleniyor...";
         btnNext.disabled = true;
         btnCheck.disabled = true;
 
         try {
-            // CORS kısıtlamalarını kaldıran modern açık proxy tüneli
-            const proxyUrl = "https://corsproxy.io?";
-            const targetApiUrl = "https://quran.com";
+            // 1 ile 6236 arasında toplam ayet sayısından rastgele bir ayet seçiyoruz
+            const randomVerseNumber = Math.floor(Math.random() * 6236) + 1;
             
-            const response = await fetch(proxyUrl + encodeURIComponent(targetApiUrl));
-            if (!response.ok) throw new Error("Ağ tüneli bağlantı hatası");
+            // Resmi Quran.com v4 API uç noktası (CORS sorunu yaratmaz)
+            const apiUrl = `https://api.quran.com/api/v4/verses/by_key/${randomVerseNumber}?words=true`;
+            
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error("API bağlantı hatası");
+            
             const data = await response.json();
             
             if (!data || !data.verse || !data.verse.words) {
-                setTimeout(fetchRandomWord, 300);
-                return;
+                throw new Error("Geçersiz veri");
             }
 
+            // Sadece kelime türündeki öğeleri filtrele (işaretleri ayıkla)
             const words = data.verse.words.filter(w => w.char_type_name === "word");
             if (words.length === 0) {
                 setTimeout(fetchRandomWord, 300);
@@ -241,30 +217,12 @@
             const targetWordIndex = Math.floor(Math.random() * words.length);
             const targetWordObject = words[targetWordIndex];
             
-            let pos = "", icase = "", istate = "";
-            if (targetWordObject.location) {
-                try {
-                    const morphUrl = `https://quran.com{targetWordObject.location}`;
-                    const morphResponse = await fetch(proxyUrl + encodeURIComponent(morphUrl));
-                    if (morphResponse.ok) {
-                        const segData = await morphResponse.json();
-                        if (segData && segData.word && segData.word.analysis) {
-                            const analysis = segData.word.analysis;
-                            pos = analysis.part_of_speech_key ? analysis.part_of_speech_key.toUpperCase() : "";
-                            let inf = analysis.inflection_details || {};
-                            icase = inf.case ? inf.case.toUpperCase() : "";
-                            istate = inf.state ? inf.state.toUpperCase() : "";
-                        }
-                    }
-                } catch(e) { console.log("Alt analiz lokal kurallara devredildi."); }
-            }
-
-            currentWordIrab = generateAdvancedArabicIrab(targetWordObject.text_uthmani, pos, icase, istate);
+            currentWordIrab = generateAdvancedArabicIrab(targetWordObject.text_uthmani);
 
             let verseText = words.map(w => w.text_uthmani).join(" ");
             let displayKey = data.verse.verse_key || "Kur'an";
             
-            document.getElementById('meta').innerText = `Ayet Konumu: [${displayKey}] | Ayet No: ${data.verse.verse_number || '-'}`;
+            document.getElementById('meta').innerText = `Ayet Konumu: [${displayKey}]`;
             document.getElementById('verse').innerText = verseText;
             document.getElementById('verse').style.fontSize = "1.5rem";
             document.getElementById('verse').style.color = "var(--text-main)";
@@ -275,10 +233,9 @@
             btnNext.disabled = false;
             btnCheck.disabled = false;
         } catch (error) {
-            console.error("Döngü emniyet filtresi:", error);
-            loadingEl.innerText = "Yapay zeka tüneli yenileniyor, lütfen 2 saniye bekleyin...";
-            btnNext.disabled = false;
-            setTimeout(fetchRandomWord, 2500); 
+            console.error("Hata:", error);
+            loadingEl.innerText = "Bağlantı yenileniyor, lütfen bekleyin...";
+            setTimeout(fetchRandomWord, 1500); 
         }
     }
 
